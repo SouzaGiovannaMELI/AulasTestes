@@ -124,4 +124,8 @@ public class ContaDAO {
                 .map(conta -> conta.toString())
                 .collect(Collectors.toList());
     }
+
+    public void deleteAll(){
+        contas.clear();
+    }
 }

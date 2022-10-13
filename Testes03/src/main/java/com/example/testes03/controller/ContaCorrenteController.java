@@ -1,5 +1,7 @@
 package com.example.testes03.controller;
 
+import com.example.testes03.dao.ContaDAO;
+import com.example.testes03.dto.ContaDTO;
 import com.example.testes03.exception.ContaInexistenteException;
 import com.example.testes03.exception.InsuficienteSaldoException;
 import com.example.testes03.exception.InvalidNumberException;
@@ -40,5 +42,10 @@ public class ContaCorrenteController {
         if(service.sacar(numero, valor)) return new ResponseEntity<>(conta, HttpStatus.OK);
 
         throw new InsuficienteSaldoException("Saldo insuficiente");
+    }
+
+    @PostMapping("/new")
+    public ResponseEntity<ContaCorrente> novaContaCorrenteBody(@RequestBody ContaDTO contaDTO){
+        return new ResponseEntity<>(service.novaContaCorrente(contaDTO.getCliente()), HttpStatus.CREATED);
     }
 }

@@ -1,5 +1,6 @@
 package com.example.testes03.controller;
 
+import com.example.testes03.dto.ContaDTO;
 import com.example.testes03.model.ContaCorrente;
 import com.example.testes03.service.ContaCorrenteService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,8 +17,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -54,7 +54,7 @@ class ContaCorrenteControllerTest {
     }
 
     @Test
-    void getConta_returnContaCorrente_quandoCriarNovaConta() throws Exception{
+    void novaContaCorrente_returnContaCorrente_quandoCriarNovaConta() throws Exception{
         BDDMockito.when(service.novaContaCorrente(anyString())).thenReturn(conta);
 
         ResultActions resposta = mockMvc.perform(
@@ -65,5 +65,38 @@ class ContaCorrenteControllerTest {
         resposta.andExpect(status().isCreated())
                 .andExpect(jsonPath("$.cliente", CoreMatchers.is(conta.getCliente())))
                 .andExpect(jsonPath("$.saldo", CoreMatchers.is(conta.getSaldo())));
+    }
+
+    @Test
+    void novaContaCorrenteBody_returnContaCorrente_quandoCriarNovaConta() throws Exception {
+        BDDMockito.when(service.novaContaCorrente(anyString())).thenReturn(conta);
+
+        ResultActions resposta = mockMvc.perform(post("/conta_corrente/new")
+                        .content(objectMapper.writeValueAsString(new ContaDTO(conta.getCliente())))
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        resposta.andExpect(status().isCreated())
+                .andExpect(jsonPath("$.cliente", CoreMatchers.is(conta.getCliente())))
+                .andExpect(jsonPath("$.saldo", CoreMatchers.is(conta.getSaldo())));
+    }
+
+    @Test
+    void depositar_returnContaCorrenteAtualizada_quandoDepositarComSucesso() throws Exception {
+        double valorDeposito = 100;
+
+        BDDMockito.when(service.getConta(anyInt())).thenReturn(conta);
+        BDDMockito.doAnswer(invocationOnMock -> {
+            conta.depositar(valorDeposito);
+            return null;
+        }).when(service).depositar(conta.getNumero(), valorDeposito);
+
+        ResultActions resposta = mockMvc.perform(
+                patch("/conta_corrente/dep/{numero}/{valor}", conta.getNumero(), valorDeposito)
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        resposta.andExpect(status().isOk())
+                .andExpect(jsonPath("$.cliente", CoreMatchers.is(conta.getCliente())))
+                .andExpect(jsonPath("$.saldo", CoreMatchers.is(valorDeposito)));
     }
 }
